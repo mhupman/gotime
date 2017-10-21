@@ -8,7 +8,7 @@ var longDayNames = [
   "Saturday"
 ];
 
-var shortDayNames = [ 
+var shortDayNames = [
   "Sun",
   "Mon",
   "Tue",
@@ -195,7 +195,7 @@ var fmtParts = {
         "short-name": "Timezone",
         "name": "The name of the time zone",
         "fmt": "MST",
-      },   
+      },
       {
         "short-name": "Timezone",
         "name": "ISO 8601 - either the numeric offset or a 'Z' for UTC - with minutes",
@@ -249,7 +249,7 @@ var fmtParts = {
     ]
   };
 
-  /* Split a time format string into the different parts. If characters don't match any formats, they're assumed to be literals. 
+  /* Split a time format string into the different parts. If characters don't match any formats, they're assumed to be literals.
 
      This is basically a port of time.nextStdChunk (https://golang.org/src/time/format.go#L130), except it splits the entire format string into a list of parts with metadata. The definitions of every part can be found in fmtParts, organized by type. */
   function tokenizeFormat(str) {
@@ -314,7 +314,7 @@ var fmtParts = {
               tokens.push({"name":"Unknown", "fmt":str[i]})
               i += 1
               break;
-          } 
+          }
           break;
         case "1":
           if (str.slice(i, i+2) == "15") {
@@ -330,7 +330,7 @@ var fmtParts = {
             tokens.push(fmtParts["Year"][0])
             i += 4
           } else {
-            tokens.push(fmtParts["Day"][0]) 
+            tokens.push(fmtParts["Day"][0])
             i += 1
           }
           break;
@@ -416,11 +416,11 @@ var fmtParts = {
           if (str[i+1] == "9") {
             var j = i+1;
             for (; j < str.length; j++) {
-              if (str[j] != "9") { break }   
+              if (str[j] != "9") { break }
             }
             if (str[j] != " " && !isNaN(str[j]) && j < str.length) {
-              tokens.push({"name":"Unknown", "fmt":str[i]}); 
-              i += 1; 
+              tokens.push({"name":"Unknown", "fmt":str[i]});
+              i += 1;
               break;
             }
             tokens.push({"short-name": "Fractional seconds", "fmt":str.slice(i, j)})
@@ -428,11 +428,11 @@ var fmtParts = {
           } else if (str[i+1] == "0") {
             var j = i+1;
             for (; j < str.length; j++) {
-              if (str[j] != "0") { break }   
+              if (str[j] != "0") { break }
             }
             if (str[j] != " " && !isNaN(str[j]) && j < str.length) {
               tokens.push({"name":"Unknown", "fmt":str[i]});
-              i += 1; 
+              i += 1;
               break;
             }
             tokens.push({"short-name": "Fractional seconds", "fmt":str.slice(i, j)})
@@ -443,7 +443,7 @@ var fmtParts = {
           }
           break;
         default:
-          tokens.push({"name":"Unknown", "fmt":str[i]}) 
+          tokens.push({"name":"Unknown", "fmt":str[i]})
           i += 1
           break;
       }
@@ -476,7 +476,7 @@ var fmtParts = {
     var spaceOffset = 0;
     if (str[pos] == " ") {
       spaceOffset = 1;
-    } 
+    }
     ret = getNum(str, pos + spaceOffset);
     ret.len += spaceOffset;
     return ret;
@@ -495,11 +495,11 @@ var fmtParts = {
         }
       }
     }
-    return { failed: true } 
+    return { failed: true }
   }
 
   /* Parse a fractional second, beginning with a dot `.`
-     If `minNums` > 0, there must be exactly `minNums` after the 
+     If `minNums` > 0, there must be exactly `minNums` after the
      dot. Otherwise all numeric characters will be consumed. */
   function getNanos(str, pos, minNums) {
     if (str[pos] != ".") {
@@ -510,7 +510,7 @@ var fmtParts = {
       }
     }
     var i;
-    for (i=pos+1; i<str.length; i++){ 
+    for (i=pos+1; i<str.length; i++){
       if (str[i] < '0' || str[i] > '9') {
         break;
       }
@@ -525,14 +525,14 @@ var fmtParts = {
 
   /* Given a list of format parts from tokenizeFormat, parse the given timeStr into it's constituent parts. This is basically a port of time.Parse (https://golang.org/src/time/format.go#L732).
 
-     Note: We don't have the list of timezone offsets, so this method doesn't mess with the hour and minute fields. The timezone name (or offset if it's an offset from UTC) will be parsed out and returned, but the hour and minute fields will *not* be adjusted appropriately. 
+     Note: We don't have the list of timezone offsets, so this method doesn't mess with the hour and minute fields. The timezone name (or offset if it's an offset from UTC) will be parsed out and returned, but the hour and minute fields will *not* be adjusted appropriately.
   */
   function parseTimeString(timeStr, tokens) {
     var year = 0;
     var month = 1;
     var day = 1;
     var dayName = "";
-    var hour = 0; 
+    var hour = 0;
     var min = 0;
     var sec = 0;
     var nsec = 0;
@@ -553,8 +553,8 @@ var fmtParts = {
             if ((timeStr.length - pos) < token.fmt.length) {
               err = "Not enough characters for year";
               failed = true;
-              break; 
-            } 
+              break;
+            }
             if (token.fmt.length == 2) {
               var yearParse = parseInt(timeStr.slice(pos, pos+2));
               if (yearParse == NaN) {
@@ -576,7 +576,7 @@ var fmtParts = {
                 break;
               }
               pos += 4;
-            } 
+            }
           break;
         case "Month":
           if ((timeStr.length - pos) < token.fmt.length) {
@@ -616,7 +616,7 @@ var fmtParts = {
             dayVal = getNum(timeStr, pos, true);
             day = dayVal.val;
           } else if (token["fmt"] == "_2") {
-            dayVal = getSpaceNum(timeStr, pos); 
+            dayVal = getSpaceNum(timeStr, pos);
             day = dayVal.val;
           } else if (token["fmt"] == "Mon") {
             // Advance the position but don't do anything
@@ -685,12 +685,12 @@ var fmtParts = {
               nanoVal = getNanos(timeStr, pos, 0);
               if (nanoVal.failed) {
                 err = "Invalid fractional seconds";
-                failed = true; 
+                failed = true;
                 break;
               }
               nsec = nanoVal.val;
               pos += nanoVal.len;
-            } 
+            }
           }
           break;
         case "AM/PM":
@@ -723,7 +723,7 @@ var fmtParts = {
           }
           if (nanoVal.failed) {
             err = "Invalid fractional seconds";
-            failed = true; 
+            failed = true;
             break;
           }
           nsec = nanoVal.val;
@@ -751,7 +751,7 @@ var fmtParts = {
                 for (; j < timeStr.length; j++) {
                   var nextChar = timeStr.slice(j, j+1);
                   if (isNaN(nextChar) || nextChar == " ") {
-                    break; 
+                    break;
                   }
                 }
                 var offset = parseInt(timeStr.slice(pos+4, j));
@@ -814,10 +814,10 @@ var fmtParts = {
                 break;
               }
               tzSign = timeStr.slice(pos, pos+1);
-              tzHour = timeStr.slice(pos+1, pos+3); 
-              tzMin = timeStr.slice(pos+4, pos+6); 
+              tzHour = timeStr.slice(pos+1, pos+3);
+              tzMin = timeStr.slice(pos+4, pos+6);
               tzSeconds = "00";
-              pos += 6; 
+              pos += 6;
             } else if (token["fmt"] == "-07" || token["fmt"] == "Z07") {
               if (timeStr.length - pos < 3) {
                 err = "Not enough characters for timezone - expected 3";
@@ -825,8 +825,8 @@ var fmtParts = {
                 break;
               }
               tzSign = timeStr.slice(pos, pos+1);
-              tzHour = timeStr.slice(pos+1, pos+3); 
-              tzMin = "00"; 
+              tzHour = timeStr.slice(pos+1, pos+3);
+              tzMin = "00";
               tzSeconds = "00";
               pos += 3;
             } else if (token["fmt"] == "Z07:00:00" || token["fmt"] == "-07:00:00") {
@@ -841,8 +841,8 @@ var fmtParts = {
                 break;
               }
               tzSign = timeStr.slice(pos, pos+1);
-              tzHour = timeStr.slice(pos+1, pos+3); 
-              tzMin = timeStr.slice(pos+4, pos+6); 
+              tzHour = timeStr.slice(pos+1, pos+3);
+              tzMin = timeStr.slice(pos+4, pos+6);
               tzSeconds = timeStr.slice(pos+7, pos+9);
               pos += 9;
             } else if (token["fmt"] == "Z070000" || token["fmt"] == "-070000") {
@@ -852,8 +852,8 @@ var fmtParts = {
                 break;
               }
               tzSign = timeStr.slice(pos, pos+1);
-              tzHour = timeStr.slice(pos+1, pos+3); 
-              tzMin = timeStr.slice(pos+3, pos+5); 
+              tzHour = timeStr.slice(pos+1, pos+3);
+              tzMin = timeStr.slice(pos+3, pos+5);
               tzSeconds = timeStr.slice(pos+5, pos+7);
               pos += 9;
             } else {
@@ -862,8 +862,8 @@ var fmtParts = {
                 failed = true;
               }
               tzSign = timeStr.slice(pos, pos+1);
-              tzHour = timeStr.slice(pos+1, pos+3); 
-              tzMin = timeStr.slice(pos+3, pos+5); 
+              tzHour = timeStr.slice(pos+1, pos+3);
+              tzMin = timeStr.slice(pos+3, pos+5);
               tzSeconds = "00";
               pos += 5;
             }
@@ -893,7 +893,7 @@ var fmtParts = {
              failed = true;
              break;
             }
-          } 
+          }
           break;
         default:
           for (j=0; j < token["fmt"].length; j++) {
@@ -908,16 +908,16 @@ var fmtParts = {
                   pos += 1;
                   if (tokens[i+1]["fmt"] == "_2" && timeStr.slice(k+1, k+2) != " " && timeStr.slice(k+1, k+2) != "0") {
                     break;
-                  }  
+                  }
                 } else {
                   break;
                 }
               }
             } else {
               pos += 1;
-            } 
+            }
           }
-      } 
+      }
     }
 
     if (pmSet && hour < 12) {
@@ -925,7 +925,7 @@ var fmtParts = {
     } else if (amSet && hour == 12) {
       hour = 0
     }
- 
+
     return {
       "Year": year,
       "Month": month,
