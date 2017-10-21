@@ -1,0 +1,27 @@
+{
+  "name": "gotime",
+  "version": "1.0.0",
+  "description": "Javascript library for parsing Golang date-time patterns",
+  "main": "gotime.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhupman/gotime.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mhupman/gotime/issues"
+  },
+  "homepage": "https://github.com/mhupman/gotime#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^4.0.1",
+    "unit.js": "^2.0.0"
+  }
+}
