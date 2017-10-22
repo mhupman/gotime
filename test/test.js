@@ -25,7 +25,7 @@ var parseTests = [
         ["RubyDate", RubyDate, "Thu Feb 04 21:00:57 -0800 2010", true, true, 1, 0],
         ["RFC850", RFC850, "Thursday, 04-Feb-10 21:00:57 PST", true, true, 1, 0],
         ["RFC1123", RFC1123, "Thu, 04 Feb 2010 21:00:57 PST", true, true, 1, 0],
-        // Don't do timezone mapping 
+        // Don't do timezone mapping
         //["RFC1123", RFC1123, "Thu, 04 Feb 2010 22:00:57 PDT", true, true, 1, 0],
         ["RFC1123Z", RFC1123Z, "Thu, 04 Feb 2010 21:00:57 -0800", true, true, 1, 0],
         ["RFC3339", RFC3339, "2010-02-04T21:00:57-08:00", true, false, 1, 0],
@@ -75,29 +75,54 @@ var parseTests = [
         ["", "Jan _2 15:04:05.999999999", "Feb  4 21:00:57.012345678", false, false, -1, 9],
 ]
 
-describe("Time Format", function() {
-  it("Parses time formats", function() {
-    for (var i=0; i < parseTests.length; i++) {
-      tokens = gotime.tokenizeFormat(parseTests[i][1]);
-      parseTime = gotime.parseTimeString(parseTests[i][2], tokens);
-      if (parseTests[i][5] != -1) {
+describe("Parse tests", function() {
+  for (var i=0; i < parseTests.length; i++) {
+    var parseTest = parseTests[i];
+    it("Format " + parseTest[0], function() {
+      tokens = gotime.tokenizeFormat(parseTest[1]);
+      parseTime = gotime.parseTimeString(parseTest[2], tokens);
+      if (parseTest[5] != -1) {
         test.number(parseTime["Year"]).is(2010);
       }
-      if (parseTests[i][4]) {
+      if (parseTest[4]) {
         test.string(parseTime["WeekDay"]).is("Thu");
       }
-      test.number(parseTime["Month"]).is(2); 
-      test.number(parseTime["Day"]).is(4); 
-      test.number(parseTime["Hour"]).is(21); 
-      test.number(parseTime["Minutes"]).is(0); 
+      test.number(parseTime["Month"]).is(2);
+      test.number(parseTime["Day"]).is(4);
+      test.number(parseTime["Hour"]).is(21);
+      test.number(parseTime["Minute"]).is(0);
       test.number(parseTime["Seconds"]).is(57);
-      var numFracSecs = parseTests[i][6]; 
+      var numFracSecs = parseTest[6];
       var fracSecs = 0;
       if (numFracSecs > 0) {
         fracSecs = parseInt("012345678".slice(0, numFracSecs));
         fracSecs = fracSecs * Math.pow(10, 8-numFracSecs);
       }
       test.number(parseTime["Nanos"]).is(fracSecs);
-    }
-  }); 
-}); 
+    });
+  }
+});
+
+// TODO: Testing the timezone formatting is silly since they aren't supported
+var formatTests = [
+  [520707843000, ANSIC, "Wed Jul  2 17:04:03 1986"],
+  [520707843000, UnixDate, "Wed Jul  2 17:04:03  1986"],
+  [520707843000, RubyDate, "Wed Jul 02 17:04:03  1986"],
+  [520707843000, RFC822, "02 Jul 86 17:04 "],
+  [520707843000, RFC822Z, "02 Jul 86 17:04 "],
+  [520707843000, RFC850, "Wednesday, 02-Jul-86 17:04:03 "],
+  [520707843000, RFC1123, "Wed, 02 Jul 1986 17:04:03 "],
+  [520707843000, RFC1123Z, "Wed, 02 Jul 1986 17:04:03 "],
+  [520707843000, RFC3339, "1986-07-02T17:04:03"],
+  [520707843000, RFC3339Nano, "1986-07-02T17:04:03"],
+  [520707843000, Kitchen, "5:04PM"],
+];
+
+describe("Format tests", function() {
+  for (let formatTest of formatTests) {
+    it("Format " + formatTest[1], function() {
+      let result = gotime.formatTimestamp(formatTest[0], formatTest[1]);
+      test.string(result).is(formatTest[2]);
+    });
+  }
+});

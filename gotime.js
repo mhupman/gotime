@@ -50,6 +50,41 @@ var longMonthNames = [
   "December"
 ];
 
+var identity = function(v) {return v + "";}
+var mod100 = function(v) {return (v%100) + "";}
+var offsetter = function(offset) {
+  return function(v) {
+    return (v + offset) + "";
+  }
+}
+
+var indexer = function(lookup, offset) {
+  return function(index) {
+    return lookup[index + (offset || 0)];
+  }
+}
+
+// From https://stackoverflow.com/a/10073788
+var pad = function(v, width, z) {
+  z = z || '0';
+  v = v + ''; // Coerce to string
+  return v.length >= width ? v : new Array(width - v.length + 1).join(z) + v;
+}
+
+var padder = function(padTo, padChar) {
+  return function(v) {
+    return pad(v, padTo, padChar);
+  }
+}
+
+var twelveHourer = function(hour) {
+  return hour > 12 ? hour-12 : hour;
+}
+
+var nothing = function(){return '';}
+
+
+
 /* All of the different supported parts of a time format string, with some user-friendly metadata. There's a lot that could be done better here. */
 var fmtParts = {
     "Year": [
@@ -57,11 +92,13 @@ var fmtParts = {
         "short-name": "Year",
         "name": "Four-digit year",
         "fmt": "2006",
+        "val": identity,
       },
       {
         "short-name": "Year",
         "name": "Two-digit year",
         "fmt": "06",
+        "val": mod100,
       }
     ],
     "Month": [
@@ -69,21 +106,27 @@ var fmtParts = {
         "short-name": "Month",
         "name": "The full name of the month",
         "fmt": "January",
+        "val": indexer(longMonthNames, 1),
       },
       {
         "short-name": "Month",
         "name": "The three-letter abbreviation for the month",
         "fmt": "Jan",
+        "val": indexer(shortMonthNames, 1),
       },
       {
         "short-name": "Month",
         "name": "The number of the month, with no leading 0",
         "fmt": "1",
+        "val": offsetter(1),
       },
       {
         "short-name": "Month",
         "name": "The number of the month, padded with a leading 0",
         "fmt": "01",
+        "val": function(v){
+          return pad(v + 1, 2);
+        },
       }
     ],
     "Day": [
@@ -91,26 +134,31 @@ var fmtParts = {
         "short-name": "Day",
         "name": "The number of the day, with no leading 0",
         "fmt": "2",
+        "val": identity,
       },
       {
         "short-name": "Day",
         "name": "The number of the day, padded with a leading space",
         "fmt": "_2",
+        "val": padder(2, " "),
       },
       {
         "short-name": "Day",
         "name": "The number of the day, padded with a leading zero",
         "fmt": "02",
+        "val": padder(2),
       },
       {
         "short-name": "Day",
         "name": "The three-letter abbreviation for the day of the week",
         "fmt": "Mon",
+        "val": indexer(shortDayNames),
       },
       {
         "short-name": "Day",
         "name": "The full name of the day of the week",
         "fmt": "Monday",
+        "val": indexer(longDayNames),
       },
     ],
     "Hour": [
@@ -118,28 +166,37 @@ var fmtParts = {
         "short-name": "Hour",
         "name": "The twenty-four hour time",
         "fmt": "15",
+        "val": identity,
       },
       {
         "short-name": "Hour",
         "name": "The twelve hour time, with no leading zero",
         "fmt": "3",
+        "val": function(v){
+          return twelveHourer(v) + '';
+        },
       },
       {
         "short-name": "Hour",
         "name": "The twelve hour time, padded with a leading zero",
         "fmt": "03",
+        "val": function(v){
+          return pad(twelveHourer(v), 2);
+        },
       },
     ],
     "Minute": [
       {
-        "short-name": "Minutes",
+        "short-name": "Minute",
         "name": "The number of minutes, with no leading zero",
         "fmt": "4",
+        "val": identity,
       },
       {
-        "short-name": "Minutes",
+        "short-name": "Minute",
         "name": "The number of minutes, padded with a leading zero",
         "fmt": "04",
+        "val": padder(2),
       },
     ],
     "Seconds": [
@@ -147,11 +204,13 @@ var fmtParts = {
         "short-name": "Seconds",
         "name": "The number of seconds, with no leading zero",
         "fmt": "5",
+        "val": identity,
       },
       {
         "short-name": "Seconds",
         "name": "The number of seconds, padded with a leading zero",
         "fmt": "05",
+        "val": padder(2),
       },
     ],
     "AM/PM": [
@@ -159,11 +218,17 @@ var fmtParts = {
         "short-name": "AM/PM",
         "name": "The time of day (AM or PM), in all upper-case",
         "fmt": "PM",
+        "val": function(hour){
+          return hour >= 12 ? "PM": "AM";
+        },
       },
       {
         "short-name": "AM/PM",
         "name": "The time of day (am or pm), in all lower-case",
         "fmt": "pm",
+        "val": function(hour){
+          return hour >= 12 ? "pm": "am";
+        },
       },
     ],
     "Milliseconds": [
@@ -265,7 +330,7 @@ var fmtParts = {
             tokens.push(fmtParts["Month"][1])
             i += 3
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -280,7 +345,7 @@ var fmtParts = {
             tokens.push(fmtParts["Timezone"][0])
             i += 3
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -311,7 +376,7 @@ var fmtParts = {
               i += 2
               break;
             default:
-              tokens.push({"name":"Unknown", "fmt":str[i]})
+              tokens.push({"short-name":"Unknown", "fmt":str[i]})
               i += 1
               break;
           }
@@ -339,7 +404,7 @@ var fmtParts = {
             tokens.push(fmtParts["Day"][1])
             i += 2
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -360,7 +425,7 @@ var fmtParts = {
             tokens.push(fmtParts["AM/PM"][0])
             i += 2
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -369,7 +434,7 @@ var fmtParts = {
             tokens.push(fmtParts["AM/PM"][1])
             i += 2
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -390,7 +455,7 @@ var fmtParts = {
             tokens.push(fmtParts["Timezone"][9])
             i += 3
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -408,7 +473,7 @@ var fmtParts = {
             tokens.push(fmtParts["Timezone"][3])
             i += 6
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
@@ -419,7 +484,7 @@ var fmtParts = {
               if (str[j] != "9") { break }
             }
             if (str[j] != " " && !isNaN(str[j]) && j < str.length) {
-              tokens.push({"name":"Unknown", "fmt":str[i]});
+              tokens.push({"short-name":"Unknown", "fmt":str[i]});
               i += 1;
               break;
             }
@@ -431,19 +496,19 @@ var fmtParts = {
               if (str[j] != "0") { break }
             }
             if (str[j] != " " && !isNaN(str[j]) && j < str.length) {
-              tokens.push({"name":"Unknown", "fmt":str[i]});
+              tokens.push({"short-name":"Unknown", "fmt":str[i]});
               i += 1;
               break;
             }
             tokens.push({"short-name": "Fractional seconds", "fmt":str.slice(i, j)})
             i = j
           } else {
-            tokens.push({"name":"Unknown", "fmt":str[i]})
+            tokens.push({"short-name":"Unknown", "fmt":str[i]})
             i += 1
           }
           break;
         default:
-          tokens.push({"name":"Unknown", "fmt":str[i]})
+          tokens.push({"short-name":"Unknown", "fmt":str[i]})
           i += 1
           break;
       }
@@ -649,7 +714,7 @@ var fmtParts = {
           pos += hourVal.len;
           hour = hourVal.val;
           break;
-        case "Minutes":
+        case "Minute":
           if ((timeStr.length - pos) < token.fmt.length) {
             err = "Not enough characters for minute";
             failed = true;
@@ -895,6 +960,9 @@ var fmtParts = {
             }
           }
           break;
+        case "Unknown":
+          pos += token["fmt"].length;
+          break;
         default:
           for (j=0; j < token["fmt"].length; j++) {
             if (timeStr.slice(pos, pos+1) != token["fmt"].slice(j, j+1)) {
@@ -932,7 +1000,7 @@ var fmtParts = {
       "WeekDay": dayName,
       "Day": day,
       "Hour": hour,
-      "Minutes": min,
+      "Minute": min,
       "Seconds": sec,
       "Nanos": nsec,
       "TZSecs": zoneOffset,
@@ -942,7 +1010,79 @@ var fmtParts = {
     }
   }
 
+  // Formats a unix timestamp (seconds since epoch) using the provided Go format string
+  // @param timestamp Milliseconds since epoch (typically equivalent to Unix timestamp * 1000)
+  function formatTimestampTokens(timestamp, tokens) {
+    const date = new Date(timestamp);
+    const year = date.getUTCFullYear(); // 2006
+    const dayNumber = date.getUTCDate(); // 2
+    const dayOfWeek = date.getUTCDay(); // Monday
+    const monthNumber = date.getUTCMonth(); // 1
+    const hour = date.getUTCHours(); // 15
+    const min = date.getUTCMinutes(); // 4
+    const sec = date.getUTCSeconds(); // 5
+
+    var result = "";
+
+    for (var i=0; i<tokens.length; i++) {
+      var token = tokens[i];
+      switch (token["short-name"]) {
+        case "Year":
+          result += token.val(year);
+          break;
+        case "Month":
+          result += token.val(monthNumber);
+          break;
+        case "Day":
+          if (token.fmt.includes("M")) {
+            result += token.val(dayOfWeek);
+          } else {
+            result += token.val(dayNumber);
+          }
+          break;
+        case "Hour":
+          result += token.val(hour);
+          break;
+        case "Minute":
+          result += token.val(min);
+          break;
+        case "Seconds":
+          result += token.val(sec);
+          break;
+        case "Fractional seconds":
+          // Ignored
+          break;
+        case "AM/PM":
+          result += token.val(hour);
+          break;
+        case "Milliseconds":
+          // Ignored
+          break;
+        case "Microseconds":
+          // Ignored
+          break;
+        case "Timezone":
+          // No timezone support
+          break;
+        case "Unknown":
+          result += token.fmt;
+          break;
+        default:
+          return "<err>";
+      }
+    }
+    return result;
+  }
+
+  function formatTimestamp(timestamp, format) {
+    return formatTimestampTokens(timestamp, tokenizeFormat(format));
+  }
+
 /* We want to import this file as a module for Mocha testing, but also include it client-side for the website itself */
 if (typeof module != 'undefined') {
-  module.exports = {"parseTimeString": parseTimeString, "tokenizeFormat": tokenizeFormat}
+  module.exports = {
+    "parseTimeString": parseTimeString,
+    "tokenizeFormat": tokenizeFormat,
+    "formatTimestamp": formatTimestamp,
+  }
 }
