@@ -1034,7 +1034,7 @@ var fmtParts = {
           result += token.val(monthNumber);
           break;
         case "Day":
-          if (token.fmt.includes("M")) {
+          if (token.fmt.indexOf("M") >= 0) {
             result += token.val(dayOfWeek);
           } else {
             result += token.val(dayNumber);
