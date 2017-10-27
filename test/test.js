@@ -118,10 +118,24 @@ var formatTests = [
   [520707843000, Kitchen, "5:04PM"],
 ];
 
+var formatDateTimeTests = [
+  [{date: {year: 1986, month: 6, day: 2}, time: {hour:17, minute: 4, second:3} }, ANSIC, "Wed Jul  2 17:04:03 1986"],
+  [{date: {year: 1986, month: 6, day: 2}, time: {hour:17, minute: 4, second:3} }, UnixDate, "Wed Jul  2 17:04:03  1986"],
+  [{date: {year: 1986, month: 6, day: 2}, time: {hour:17, minute: 4, second:3} }, RubyDate, "Wed Jul 02 17:04:03  1986"],
+  [{date: {year: 1986, month: 6, day: 2}, time: {hour:17} }, RubyDate, "Wed Jul 02 17:00:00  1986"],
+  [{date: {year: 1986, month: 6, day: 2}}, RubyDate, "Wed Jul 02 0:00:00  1986"],
+];
+
 describe("Format tests", function() {
   for (let formatTest of formatTests) {
-    it("Format " + formatTest[1], function() {
+    it("Format timestamp " + formatTest[1], function() {
       let result = gotime.formatTimestamp(formatTest[0], formatTest[1]);
+      test.string(result).is(formatTest[2]);
+    });
+  }
+  for (let formatTest of formatDateTimeTests) {
+    it("Format date/time " + formatTest[2], function() {
+      let result = gotime.formatDateTime(formatTest[0],formatTest[1]);
       test.string(result).is(formatTest[2]);
     });
   }

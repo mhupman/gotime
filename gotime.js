@@ -1014,6 +1014,22 @@ var fmtParts = {
   // @param timestamp Milliseconds since epoch (typically equivalent to Unix timestamp * 1000)
   function formatTimestampTokens(timestamp, tokens) {
     const date = new Date(timestamp);
+    return formatDateUTCTokens(date, tokens);
+  }
+
+  function formatDateLocalTokens(date, tokens) {
+    const year = date.getFullYear(); // 2006
+    const dayNumber = date.getDate(); // 2
+    const dayOfWeek = date.getDay(); // Monday
+    const monthNumber = date.getMonth(); // 1
+    const hour = date.getHours(); // 15
+    const min = date.getMinutes(); // 4
+    const sec = date.getSeconds(); // 5
+    return formatDateTimeTokens(year, dayNumber, dayOfWeek, monthNumber, hour, min, sec, tokens);
+  }
+
+
+  function formatDateUTCTokens(date, tokens) {
     const year = date.getUTCFullYear(); // 2006
     const dayNumber = date.getUTCDate(); // 2
     const dayOfWeek = date.getUTCDay(); // Monday
@@ -1021,7 +1037,12 @@ var fmtParts = {
     const hour = date.getUTCHours(); // 15
     const min = date.getUTCMinutes(); // 4
     const sec = date.getUTCSeconds(); // 5
+    return formatDateTimeTokens(year, dayNumber, dayOfWeek, monthNumber, hour, min, sec, tokens);
+  }
 
+  // Formats a JS Date using the provided Go format string
+  // @param date date to be formatted
+  function formatDateTimeTokens(year, dayNumber, dayOfWeek, monthNumber, hour, min, sec, tokens) {
     var result = "";
 
     for (var i=0; i<tokens.length; i++) {
@@ -1078,11 +1099,35 @@ var fmtParts = {
     return formatTimestampTokens(timestamp, tokenizeFormat(format));
   }
 
+  // Formats an object containing date and time components using the provided format
+  // @param {Object} dateTime Date and time of the form: { date: {year: 2017, month: 10, day: 27}, time: {hour: 14, minute: 15, second: 30}  }
+  // @param {string} format
+  function formatDateTime(dateTime, format) {
+    if(dateTime.time === undefined){
+      dateTime.time = {};
+    }
+    if(dateTime.time.hour === undefined){
+      dateTime.time.hour = 0;
+    }
+    if(dateTime.time.second === undefined){
+      dateTime.time.second = 0;
+    }
+    if(dateTime.time.minute === undefined){
+      dateTime.time.minute = 0;
+    }
+    if(dateTime.time.second === undefined){
+      dateTime.time.second = 0;
+    }
+    const date = new Date(dateTime.date.year, dateTime.date.month, dateTime.date.day, dateTime.time.hour, dateTime.time.minute, dateTime.time.second);
+    return formatDateLocalTokens(date, tokenizeFormat(format));
+  }
+
 /* We want to import this file as a module for Mocha testing, but also include it client-side for the website itself */
 if (typeof module != 'undefined') {
   module.exports = {
     "parseTimeString": parseTimeString,
     "tokenizeFormat": tokenizeFormat,
     "formatTimestamp": formatTimestamp,
+    "formatDateTime": formatDateTime,
   }
 }
