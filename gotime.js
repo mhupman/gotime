@@ -1109,9 +1109,6 @@ var fmtParts = {
     if(dateTime.time.hour === undefined){
       dateTime.time.hour = 0;
     }
-    if(dateTime.time.second === undefined){
-      dateTime.time.second = 0;
-    }
     if(dateTime.time.minute === undefined){
       dateTime.time.minute = 0;
     }
